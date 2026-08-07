@@ -11,8 +11,8 @@
 #include <cmath>
 #include <tuple>
 
-#ifndef AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
-#    define AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE 1
+#ifndef AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
+#    define AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE 1
 #endif
 
 namespace editor
@@ -223,7 +223,7 @@ void ScenePreviewRuntime::sync(const SceneNode& rootNode,
 
 void ScenePreviewRuntime::renderToTexture(const SceneCanvasFrame& frame)
 {
-#if AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
+#if AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
     if (!m_root)
         return;
 

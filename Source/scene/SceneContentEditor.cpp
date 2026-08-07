@@ -15,8 +15,8 @@
 #include <cstdio>
 #include <iterator>
 
-#ifndef AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
-#    define AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE 1
+#ifndef AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
+#    define AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE 1
 #endif
 
 namespace editor
@@ -345,7 +345,7 @@ void SceneContentEditor::draw(EditorContext& context,
     }
 
     m_previewRuntime.sync(document.root(), documentKey, frame, m_pan, m_zoom);
-#if AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
+#if AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
     m_previewRuntime.renderToTexture(frame);
 #endif
 
@@ -355,7 +355,7 @@ void SceneContentEditor::draw(EditorContext& context,
     drawList->AddRect(canvasPos, canvasEnd, IM_COL32(72, 78, 86, 255));
 
     drawCanvasGrid(drawList, frame);
-#if AXMOL_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
+#if AXMOL_FIGHTER_EDITOR_LAYER_PREVIEW_RENDER_TEXTURE
     if (m_previewRuntime.renderTexture() && m_previewRuntime.renderTexture()->getSprite())
     {
         ax::Sprite* renderTextureSprite = m_previewRuntime.renderTexture()->getSprite();

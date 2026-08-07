@@ -1,12 +1,12 @@
-# axmol_editor
+# AxmolFighter-Editor
 
-`tools/axmol_editor` is a minimal Axmol + ImGui editor shell. It keeps the
+`tools/AxmolFighter-Editor` is a minimal Axmol + ImGui editor shell. It keeps the
 application framework, docking layout, document registry, and a few starter
 panels so new editor features can be rebuilt from a clean base.
 
 ## Build
 
-Run from `tools/axmol_editor`:
+Run from `tools/AxmolFighter-Editor`:
 
 ```bat
 build.bat
@@ -20,7 +20,7 @@ axmol build -p win32
 
 ## Run
 
-Run from `tools/axmol_editor`:
+Run from `tools/AxmolFighter-Editor`:
 
 ```bat
 run.bat RelWithDebInfo

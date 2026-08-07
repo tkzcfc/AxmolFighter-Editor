@@ -6,7 +6,7 @@
 
     <Application.Resources>
 
-      <x:String x:Key="AppName">axmol_editor</x:String>
+      <x:String x:Key="AppName">AxmolFighter-Editor</x:String>
 
     </Application.Resources>
 </Application>
