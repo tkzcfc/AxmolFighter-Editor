@@ -117,8 +117,8 @@ std::string NpkExporterModule::defaultOutputRoot(EditorContext& context)
     for (std::filesystem::path candidate = resourceRoot; !candidate.empty(); candidate = candidate.parent_path())
     {
         error.clear();
-        if (std::filesystem::is_directory(candidate / "client", error))
-            return (candidate / "client" / "Content" / "mugen").lexically_normal().generic_string();
+        if (std::filesystem::is_directory(candidate / "AxmolFighter-Client", error))
+            return (candidate / "AxmolFighter-Client" / "Content" / "mugen").lexically_normal().generic_string();
         if (candidate == candidate.root_path())
             break;
     }
@@ -127,7 +127,7 @@ std::string NpkExporterModule::defaultOutputRoot(EditorContext& context)
     const std::filesystem::path repositoryRoot =
         resourceRoot.filename() == "Content" ? resourceRoot.parent_path().parent_path().parent_path()
                                                : resourceRoot.parent_path().parent_path();
-    return (repositoryRoot / "client" / "Content" / "mugen").lexically_normal().generic_string();
+    return (repositoryRoot / "AxmolFighter-Client" / "Content" / "mugen").lexically_normal().generic_string();
 }
 
 void NpkExporterModule::onImGuiRender(EditorContext& context)

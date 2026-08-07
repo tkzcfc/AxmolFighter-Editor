@@ -232,4 +232,5 @@ tests/*-tests/build_*
 
 .gitee
 release_note_draft.txt
-run.bat.in
+run.bat
+run.bat.txt
