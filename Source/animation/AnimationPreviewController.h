@@ -18,11 +18,6 @@ class RenderTexture;
 class Node;
 }
 
-namespace spine
-{
-class SkeletonAnimation;
-}
-
 namespace editor
 {
 class AniDocument;
@@ -78,7 +73,7 @@ private:
     std::vector<std::int32_t> m_boundaries;
     std::int32_t m_timeMs = 0;
     std::size_t m_frameIndex = 0;
-    spine::SkeletonAnimation* m_spine = nullptr;
+    ax::Node* m_spine = nullptr;
     ax::Node* m_spineRoot = nullptr;
     ax::RenderTexture* m_spineRenderTexture = nullptr;
     int m_spineRenderTextureRequestedWidth = 0;

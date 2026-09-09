@@ -8,11 +8,7 @@
 #include "editor_properties/FloatEditorProperty.h"
 #include "editor_properties/OptionalStringEnumEditorProperty.h"
 #include "scene/SceneDocument.h"
-#include "spine/Animation.h"
 #include "spine/SafeSkeletonAnimation.h"
-#include "spine/SkeletonAnimation.h"
-#include "spine/SkeletonData.h"
-#include "spine/Skin.h"
 
 #include <algorithm>
 #include <cmath>
@@ -39,23 +35,11 @@ SpinePreviewInfo loadSpinePreviewInfo(const SceneNode& node)
 
     auto [error, animation] = createSafeSkeletonAnimation(node.spine.jsonPath, node.spine.atlasPath);
     (void)error;
-    if (!animation || !animation->getSkeleton() || !animation->getSkeleton()->getData())
+    if (!isEditorSpineNode(animation))
         return info;
 
-    spine::SkeletonData* data = animation->getSkeleton()->getData();
-    spine::Vector<spine::Animation*>& animations = data->getAnimations();
-    for (size_t index = 0; index < animations.size(); ++index)
-    {
-        if (animations[index])
-            info.animations.emplace_back(animations[index]->getName().buffer());
-    }
-
-    spine::Vector<spine::Skin*>& skins = data->getSkins();
-    for (size_t index = 0; index < skins.size(); ++index)
-    {
-        if (skins[index])
-            info.skins.emplace_back(skins[index]->getName().buffer());
-    }
+    collectSpineAnimations(animation, info.animations);
+    collectSpineSkins(animation, info.skins);
 
     const ax::Rect bounds = animation->getBoundingBox();
     info.width = std::max(0.0f, bounds.size.width);
@@ -214,7 +198,7 @@ void SpineNodeEditor::appendPropertyGroups(SceneNode& node, std::vector<EditorPr
         applySpineAutoSize(context.node, loadSpinePreviewInfo(context.node));
     };
     group.properties.push_back(std::make_unique<AssetReferenceEditorProperty>(editPrefix + "jsonPath",
-                                                                             "JSON Path",
+                                                                             "Skeleton Path",
                                                                              node.spine.jsonPath,
                                                                              std::initializer_list<AssetKind>{AssetKind::Spine},
                                                                              assignSpine));
@@ -256,25 +240,17 @@ std::tuple<std::string, ax::Node*> SpineNodeEditor::createEngineNode(const Scene
                                                                           const SceneNodeRuntimeContext&) const
 {
     auto [error, animation] = createSafeSkeletonAnimation(node.spine.jsonPath, node.spine.atlasPath);
-    if (!animation)
+    if (!isEditorSpineNode(animation))
         return {error.empty() ? ("Failed to create Spine: " + node.spine.jsonPath) : error, nullptr};
 
-    if (!node.spine.skinName.empty() && animation->getSkeleton() && animation->getSkeleton()->getData() &&
-        animation->getSkeleton()->getData()->findSkin(node.spine.skinName.c_str()))
-    {
-        animation->setSkin(node.spine.skinName);
-    }
+    if (spineHasSkin(animation, node.spine.skinName))
+        spineSetSkin(animation, node.spine.skinName);
 
-    if (!node.spine.animationName.empty())
-    {
-        if (animation->findAnimation(node.spine.animationName))
-            animation->setAnimation(0, node.spine.animationName, node.spine.loop);
-    }
+    if (!node.spine.animationName.empty() && spineHasAnimation(animation, node.spine.animationName))
+        spineSetAnimation(animation, 0, node.spine.animationName, node.spine.loop);
 
-    animation->setTimeScale(std::max(0.0f, node.spine.timeScale));
-    animation->setDebugBonesEnabled(node.spine.debugBones);
-    animation->setDebugSlotsEnabled(node.spine.debugSlots);
-    animation->setDebugMeshesEnabled(node.spine.debugMeshes);
+    spineSetTimeScale(animation, std::max(0.0f, node.spine.timeScale));
+    spineSetDebugEnabled(animation, node.spine.debugBones, node.spine.debugSlots, node.spine.debugMeshes);
     return {"", animation};
 }
 
@@ -291,28 +267,21 @@ bool SpineNodeEditor::updateEngineNode(ax::Node& runtimeNode,
                                             const SceneNode& node,
                                             const SceneNodeRuntimeContext&) const
 {
-    auto* animation = dynamic_cast<spine::SkeletonAnimation*>(&runtimeNode);
-    if (!animation)
+    ax::Node* animation = &runtimeNode;
+    if (!isEditorSpineNode(animation))
         return false;
 
-    if (!node.spine.skinName.empty() && animation->getSkeleton() && animation->getSkeleton()->getData() &&
-        animation->getSkeleton()->getData()->findSkin(node.spine.skinName.c_str()))
-    {
-        animation->setSkin(node.spine.skinName);
-    }
+    if (spineHasSkin(animation, node.spine.skinName))
+        spineSetSkin(animation, node.spine.skinName);
     else
-    {
-        animation->setSkin("");
-    }
+        spineSetSkin(animation, "");
 
-    animation->clearTracks();
-    if (!node.spine.animationName.empty() && animation->findAnimation(node.spine.animationName))
-        animation->setAnimation(0, node.spine.animationName, node.spine.loop);
+    spineClearTracks(animation);
+    if (!node.spine.animationName.empty() && spineHasAnimation(animation, node.spine.animationName))
+        spineSetAnimation(animation, 0, node.spine.animationName, node.spine.loop);
 
-    animation->setTimeScale(std::max(0.0f, node.spine.timeScale));
-    animation->setDebugBonesEnabled(node.spine.debugBones);
-    animation->setDebugSlotsEnabled(node.spine.debugSlots);
-    animation->setDebugMeshesEnabled(node.spine.debugMeshes);
+    spineSetTimeScale(animation, std::max(0.0f, node.spine.timeScale));
+    spineSetDebugEnabled(animation, node.spine.debugBones, node.spine.debugSlots, node.spine.debugMeshes);
     return true;
 }
 }  // namespace editor

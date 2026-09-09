@@ -12,16 +12,10 @@
 #include "renderer/Renderer.h"
 #include "renderer/Texture2D.h"
 #include "renderer/TextureCache.h"
-#include "spine/Animation.h"
-#include "spine/AnimationState.h"
 #include "spine/SafeSkeletonAnimation.h"
-#include "spine/Skeleton.h"
-#include "spine/SkeletonAnimation.h"
-#include "spine/SkeletonData.h"
 
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <memory>
 
 namespace editor
@@ -210,21 +204,16 @@ bool AnimationPreviewController::loadSpine(const std::filesystem::path& jsonPath
 
     auto [spineError, spineNode] =
         createSafeSkeletonAnimation(jsonPath.generic_string(), atlasPath.generic_string());
-    if (!spineNode || !spineNode->getSkeleton() || !spineNode->getSkeleton()->getData())
+    if (!isEditorSpineNode(spineNode))
     {
         m_error = spineError.empty() ? ("Failed to load Spine preview: " + jsonPath.generic_string()) : spineError;
         return false;
     }
     m_spine = spineNode;
-    m_spine->setUpdateOnlyIfVisible(false);
+    spineSetUpdateOnlyIfVisible(m_spine, false);
     m_spineRoot->addChild(m_spine);
 
-    spine::Vector<spine::Animation*>& animations = m_spine->getSkeleton()->getData()->getAnimations();
-    for (std::size_t index = 0; index < animations.size(); ++index)
-    {
-        if (animations[index])
-            m_spineAnimations.emplace_back(animations[index]->getName().buffer());
-    }
+    collectSpineAnimations(m_spine, m_spineAnimations);
     if (m_spineAnimations.empty())
     {
         m_error = "Spine preview contains no animations.";
@@ -235,21 +224,20 @@ bool AnimationPreviewController::loadSpine(const std::filesystem::path& jsonPath
         m_error = "Select a Spine preview animation.";
         return false;
     }
-    spine::Animation* animation = m_spine->findAnimation(animationName);
-    if (!animation)
+    if (!spineHasAnimation(m_spine, animationName))
     {
         m_error = "Spine preview animation was not found: " + animationName;
         return false;
     }
 
-    spine::TrackEntry* entry = m_spine->setAnimation(0, animationName, false);
-    if (!entry)
+    if (!spineSetAnimation(m_spine, 0, animationName, false))
     {
         m_error = "Failed to select Spine preview animation: " + animationName;
         return false;
     }
-    entry->setTrackEnd(std::numeric_limits<float>::max());
-    m_spineDurationMs = std::max(1, static_cast<std::int32_t>(std::lround(animation->getDuration() * 1000.0f)));
+    spineKeepCurrentTrackAlive(m_spine, 0);
+    m_spineDurationMs = std::max(
+        1, static_cast<std::int32_t>(std::lround(spineAnimationDuration(m_spine, animationName) * 1000.0f)));
     m_error.clear();
     setTime(0);
     return true;
@@ -267,22 +255,21 @@ bool AnimationPreviewController::setSpineAnimation(const std::string& animationN
         m_error = "Select a Spine preview animation.";
         return false;
     }
-    spine::Animation* animation = m_spine->findAnimation(animationName);
-    if (!animation)
+    if (!spineHasAnimation(m_spine, animationName))
     {
         m_error = "Spine preview animation was not found: " + animationName;
         return false;
     }
 
-    spine::TrackEntry* entry = m_spine->setAnimation(0, animationName, false);
-    if (!entry)
+    if (!spineSetAnimation(m_spine, 0, animationName, false))
     {
         m_error = "Failed to select Spine preview animation: " + animationName;
         return false;
     }
-    entry->setTrackEnd(std::numeric_limits<float>::max());
+    spineKeepCurrentTrackAlive(m_spine, 0);
     m_spineAnimation  = animationName;
-    m_spineDurationMs = std::max(1, static_cast<std::int32_t>(std::lround(animation->getDuration() * 1000.0f)));
+    m_spineDurationMs = std::max(
+        1, static_cast<std::int32_t>(std::lround(spineAnimationDuration(m_spine, animationName) * 1000.0f)));
     m_error.clear();
     setTime(0);
     return true;
@@ -306,13 +293,8 @@ void AnimationPreviewController::setTime(std::int32_t timeMs)
         return;
     }
     m_spine->setVisible(true);
-    if (spine::TrackEntry* entry = m_spine->getCurrent(0))
-    {
-        const float timeSeconds = static_cast<float>(m_timeMs) / 1000.0f;
-        entry->setTrackTime(timeSeconds);
-        entry->setAnimationLast(timeSeconds);
-    }
-    m_spine->update(0.0f);
+    spineSeekCurrentTrack(m_spine, 0, static_cast<float>(m_timeMs) / 1000.0f);
+    spineUpdate(m_spine, 0.0f);
 }
 
 bool AnimationPreviewController::isLoaded() const

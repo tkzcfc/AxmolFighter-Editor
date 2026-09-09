@@ -75,8 +75,14 @@ file(GLOB_RECURSE GAME_SOURCE CONFIGURE_DEPENDS
   Source/*.cpp Source/*.c
 )
 
+# Spine 3.4 runtime is C; keep MSVC from compiling those files as C++.
+file(GLOB SPINE34_C_SOURCES CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine/spine_3_4/*.c")
+set_source_files_properties(${SPINE34_C_SOURCES} PROPERTIES LANGUAGE C)
+
 set(GAME_INC_DIRS
   "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+  "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine" # <spine_3_4/...>
 )
 
 set(content_folder
@@ -123,6 +129,7 @@ if(_AX_TESTS)
  set(TEST_INC_DIRS
    "${CMAKE_CURRENT_SOURCE_DIR}/Tests"
    "${CMAKE_CURRENT_SOURCE_DIR}/Source"
+   "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine"
  )
 endif()
 
@@ -142,6 +149,8 @@ if(_AX_TESTS)
 endif()
 
 foreach(EDITOR_TARGET ${EDITOR_TARGETS})
+  target_include_directories(${EDITOR_TARGET} BEFORE PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/3rd/spine")
   target_include_directories(${EDITOR_TARGET} PRIVATE
     "${_AX_ROOT}/extensions/ImGui/src"
     "${_AX_ROOT}/extensions/ImGui/src/ImGui"
