@@ -515,10 +515,15 @@ bool LayerDocument::deleteShape(const std::string& id)
     return true;
 }
 
+const DocumentGenMeta& LayerDocument::genMeta() const
+{
+    return m_genMeta;
+}
+
 bool LayerDocument::loadFromJson(const std::string& json)
 {
     rapidjson::Document document;
-    document.Parse(json.c_str());
+    document.Parse<kDocumentJsonParseFlags>(json.c_str());
     if (document.HasParseError())
     {
         m_lastError = "Invalid layer JSON: ";
@@ -570,6 +575,7 @@ bool LayerDocument::loadFromJson(const std::string& json)
         m_selectedShapeId.clear();
     if (!m_selectedShapeId.empty())
         clearNodeSelection();
+    m_genMeta.readFrom(document);
     return true;
 }
 
@@ -599,6 +605,7 @@ std::string LayerDocument::toJson() const
     writer.EndArray();
     writer.EndObject();
     writer.EndObject();
+    m_genMeta.writeTo(writer);
     writer.EndObject();
     return std::string(buffer.GetString(), buffer.GetSize());
 }
@@ -611,6 +618,7 @@ void LayerDocument::resetToDefault()
     m_version = kCurrentVersion;
     m_nextShapeSerial = 1;
     m_lastError.clear();
+    m_genMeta.clear();
     resetSceneUndoHistory();
 }
 

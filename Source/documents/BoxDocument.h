@@ -1,6 +1,7 @@
 #pragma once
 
 #include "combat/CombatBoxTypes.h"
+#include "documents/DocumentGenMeta.h"
 #include "documents/IEditorDocument.h"
 
 #include <filesystem>
@@ -34,6 +35,7 @@ public:
     void normalizeKeys();
     void normalizeToDuration();
     std::size_t revision() const;
+    const DocumentGenMeta& genMeta() const;
 
 private:
     bool loadFromJson(const std::string& json);
@@ -45,6 +47,7 @@ private:
     BoxData m_savedData;
     BoxData m_undoCheckpoint;
     BoxData m_transactionSnapshot;
+    DocumentGenMeta m_genMeta;
     std::string m_lastError;
     std::vector<BoxData> m_undoStack;
     std::vector<BoxData> m_redoStack;

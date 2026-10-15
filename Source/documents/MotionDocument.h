@@ -1,5 +1,6 @@
 #pragma once
 
+#include "documents/DocumentGenMeta.h"
 #include "documents/IEditorDocument.h"
 #include "motion/MotionTypes.h"
 
@@ -32,6 +33,7 @@ public:
     void cancelEditTransaction();
     void markDirty();
     std::size_t revision() const;
+    const DocumentGenMeta& genMeta() const;
 
 private:
     bool loadFromJson(const std::string& json);
@@ -44,6 +46,7 @@ private:
     MotionData m_savedData;
     MotionData m_undoCheckpoint;
     MotionData m_transactionSnapshot;
+    DocumentGenMeta m_genMeta;
     std::string m_lastError;
     std::vector<MotionData> m_undoStack;
     std::vector<MotionData> m_redoStack;

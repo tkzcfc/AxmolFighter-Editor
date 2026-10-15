@@ -423,10 +423,12 @@ void BoxDocument::normalizeKeys()
 
 std::size_t BoxDocument::revision() const { return m_revision; }
 
+const DocumentGenMeta& BoxDocument::genMeta() const { return m_genMeta; }
+
 bool BoxDocument::loadFromJson(const std::string& json)
 {
     rapidjson::Document root;
-    root.Parse(json.c_str());
+    root.Parse<kDocumentJsonParseFlags>(json.c_str());
     if (root.HasParseError())
     {
         m_lastError = std::string("Invalid box JSON: ") + rapidjson::GetParseError_En(root.GetParseError());
@@ -526,6 +528,7 @@ bool BoxDocument::loadFromJson(const std::string& json)
     }
 
     m_data = std::move(parsed);
+    m_genMeta.readFrom(root);
     return true;
 }
 
@@ -575,6 +578,7 @@ std::string BoxDocument::toJson() const
         writer.EndObject();
     }
     writer.EndArray();
+    m_genMeta.writeTo(writer);
     writer.EndObject();
     return buffer.GetString();
 }

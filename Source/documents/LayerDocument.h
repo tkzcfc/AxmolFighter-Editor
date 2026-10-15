@@ -1,5 +1,6 @@
 #pragma once
 
+#include "documents/DocumentGenMeta.h"
 #include "documents/IEditorDocument.h"
 #include "layer/ShapePluginData.h"
 #include "scene/SceneDocument.h"
@@ -37,6 +38,7 @@ public:
     LayerShape* addShape(const std::string& type);
     bool canDeleteShape(const std::string& id) const;
     bool deleteShape(const std::string& id);
+    const DocumentGenMeta& genMeta() const;
 
 private:
     bool loadFromJson(const std::string& json);
@@ -58,6 +60,7 @@ private:
     std::string m_selectedShapeId;
     std::vector<LayerShape> m_shapes;
     std::string m_lastError;
+    DocumentGenMeta m_genMeta;
     int m_version         = kCurrentVersion;
     int m_nextShapeSerial = 1;
 };

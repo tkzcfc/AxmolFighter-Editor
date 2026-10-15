@@ -1,6 +1,7 @@
 #pragma once
 
 #include "animation/AnimationTypes.h"
+#include "documents/DocumentGenMeta.h"
 #include "documents/IEditorDocument.h"
 
 #include <string>
@@ -37,6 +38,7 @@ public:
     void cancelEditTransaction();
     void markDirty();
     std::size_t revision() const;
+    const DocumentGenMeta& genMeta() const;
 
 private:
     bool loadFromJson(const std::string& json);
@@ -51,6 +53,7 @@ private:
     std::vector<FrameAnimationData> m_undoStack;
     std::vector<FrameAnimationData> m_redoStack;
     FrameAnimationData m_transactionSnapshot;
+    DocumentGenMeta m_genMeta;
     bool m_editTransactionActive = false;
     std::size_t m_revision       = 0;
 };

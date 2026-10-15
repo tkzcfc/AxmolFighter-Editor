@@ -375,10 +375,15 @@ std::size_t AniDocument::revision() const
     return m_revision;
 }
 
+const DocumentGenMeta& AniDocument::genMeta() const
+{
+    return m_genMeta;
+}
+
 bool AniDocument::loadFromJson(const std::string& json)
 {
     rapidjson::Document root;
-    root.Parse(json.c_str());
+    root.Parse<kDocumentJsonParseFlags>(json.c_str());
     if (root.HasParseError())
     {
         m_lastError = std::string("Invalid animation JSON: ") + rapidjson::GetParseError_En(root.GetParseError());
@@ -507,6 +512,7 @@ bool AniDocument::loadFromJson(const std::string& json)
     }
 
     m_animation = std::move(parsed);
+    m_genMeta.readFrom(root);
     return true;
 }
 
@@ -559,6 +565,7 @@ std::string AniDocument::toJson() const
         writer.EndObject();
     }
     writer.EndArray();
+    m_genMeta.writeTo(writer);
     writer.EndObject();
     return buffer.GetString();
 }

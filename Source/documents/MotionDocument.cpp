@@ -243,10 +243,12 @@ void MotionDocument::markDirty()
 
 std::size_t MotionDocument::revision() const { return m_revision; }
 
+const DocumentGenMeta& MotionDocument::genMeta() const { return m_genMeta; }
+
 bool MotionDocument::loadFromJson(const std::string& json)
 {
     rapidjson::Document root;
-    root.Parse(json.c_str());
+    root.Parse<kDocumentJsonParseFlags>(json.c_str());
     if (root.HasParseError())
     {
         m_lastError = std::string("Invalid motion JSON: ") + rapidjson::GetParseError_En(root.GetParseError());
@@ -332,6 +334,7 @@ bool MotionDocument::loadFromJson(const std::string& json)
         return false;
 
     m_data = std::move(parsed);
+    m_genMeta.readFrom(root);
     return true;
 }
 
@@ -375,6 +378,7 @@ std::string MotionDocument::toJson() const
         writer.EndObject();
     }
     writer.EndArray();
+    m_genMeta.writeTo(writer);
     writer.EndObject();
     return buffer.GetString();
 }
