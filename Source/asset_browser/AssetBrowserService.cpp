@@ -43,6 +43,7 @@ bool AssetBrowserService::refresh(const std::filesystem::path& root, std::string
         resetPlaceholderRoot(root);
         m_scanned = false;
         m_scanning = false;
+        m_scanProgress.reset();
         return false;
     }
 
@@ -50,16 +51,19 @@ bool AssetBrowserService::refresh(const std::filesystem::path& root, std::string
     m_root = normalizedRoot;
     m_scanning = true;
     m_statusMessage = "Scanning assets...";
+    auto progress = std::make_shared<ScanProgress>();
+    m_scanProgress = progress;
     if (!m_rootAsset)
         resetPlaceholderRoot(normalizedRoot);
 
     const std::uint64_t generation = ++m_scanGeneration;
     auto result = std::make_shared<AssetScanResult>();
     ax::Director::getInstance()->getJobSystem()->enqueue(
-        [this, normalizedRoot, result] {
+        [this, normalizedRoot, result, progress] {
             try
             {
-                result->rootAsset = buildDirectory(normalizedRoot, normalizedRoot);
+                progress->total.store(countDirectories(normalizedRoot), std::memory_order_relaxed);
+                result->rootAsset = buildDirectory(normalizedRoot, normalizedRoot, *progress);
                 result->rootAsset->name = "Content";
                 result->rootAsset->displayName = "Content";
                 result->rootAsset->relativePath.clear();
@@ -145,8 +149,34 @@ const std::string& AssetBrowserService::statusMessage() const
     return m_statusMessage;
 }
 
+std::size_t AssetBrowserService::scanCompleted() const
+{
+    return m_scanProgress ? m_scanProgress->completed.load(std::memory_order_relaxed) : 0;
+}
+
+std::size_t AssetBrowserService::scanTotal() const
+{
+    return m_scanProgress ? m_scanProgress->total.load(std::memory_order_relaxed) : 0;
+}
+
+std::size_t AssetBrowserService::countDirectories(const std::filesystem::path& directory) const
+{
+    std::size_t count = 1;
+    std::error_code error;
+    for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory, error))
+    {
+        if (error)
+            break;
+
+        if (entry.is_directory(error) && !error)
+            count += countDirectories(entry.path());
+    }
+    return count;
+}
+
 std::unique_ptr<FolderAsset> AssetBrowserService::buildDirectory(const std::filesystem::path& root,
-                                                                 const std::filesystem::path& directory) const
+                                                                 const std::filesystem::path& directory,
+                                                                 ScanProgress& progress) const
 {
     auto directoryAsset = std::make_unique<FolderAsset>();
     directoryAsset->absolutePath = directory.lexically_normal();
@@ -164,7 +194,7 @@ std::unique_ptr<FolderAsset> AssetBrowserService::buildDirectory(const std::file
 
         if (entry.is_directory(error))
         {
-            directoryAsset->children.push_back(buildDirectory(root, entry.path()));
+            directoryAsset->children.push_back(buildDirectory(root, entry.path(), progress));
         }
         else if (!error)
         {
@@ -183,6 +213,7 @@ std::unique_ptr<FolderAsset> AssetBrowserService::buildDirectory(const std::file
         scanner->scan(context, directoryAsset->children);
 
     std::sort(directoryAsset->children.begin(), directoryAsset->children.end(), sortAssets);
+    progress.completed.fetch_add(1, std::memory_order_relaxed);
     return directoryAsset;
 }
 

@@ -337,6 +337,7 @@ void AssetBrowserModule::drawAssetContextMenu(EditorContext& context,
             m_statusMessage = message;
         else
             m_statusMessage = message;
+        ImGui::CloseCurrentPopup();
     }
 
     if (allowCreate)

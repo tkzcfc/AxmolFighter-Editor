@@ -19,6 +19,7 @@
 #include "modules/DockingLayoutModule.h"
 #include "modules/EditorSettingsModule.h"
 #include "modules/InspectorModule.h"
+#include "modules/LoadingOverlayModule.h"
 #include "modules/LogModule.h"
 #include "modules/MainMenuModule.h"
 #include "modules/ModalDialogModule.h"
@@ -60,6 +61,8 @@ void EditorRuntime::initialize()
         throw std::runtime_error("Failed to register document editor: " + registrationError);
     m_context.services().add(documentEditors);
     m_context.services().add(std::make_shared<SceneNodeClipboardService>());
+    if (auto browser = m_context.services().get<AssetBrowserService>())
+        browser->refresh(m_context.settings().resolvedResourceRoot());
     registerDefaultModules();
     m_context.modules().attachAll(m_context);
     m_initialized = true;
@@ -111,6 +114,7 @@ void EditorRuntime::registerDefaultModules()
     modules.add(std::make_unique<ShapeListModule>());
     modules.add(std::make_unique<DocumentCloseDialogModule>());
     modules.add(std::make_unique<ModalDialogModule>());
+    modules.add(std::make_unique<LoadingOverlayModule>());
 
     m_modulesRegistered = true;
 }

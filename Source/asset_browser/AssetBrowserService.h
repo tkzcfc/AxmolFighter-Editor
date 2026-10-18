@@ -3,6 +3,8 @@
 #include "asset_browser/FolderAsset.h"
 #include "core/IService.h"
 
+#include <atomic>
+#include <cstddef>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -18,16 +20,27 @@ public:
     const Asset* findAsset(const std::filesystem::path& relativePath) const;
     bool isScanning() const;
     const std::string& statusMessage() const;
+    std::size_t scanCompleted() const;
+    std::size_t scanTotal() const;
     std::filesystem::path normalizeRelativeDirectory(const std::filesystem::path& relativeDirectory) const;
 
 private:
+    struct ScanProgress
+    {
+        std::atomic<std::size_t> completed{0};
+        std::atomic<std::size_t> total{0};
+    };
+
     std::unique_ptr<FolderAsset> buildDirectory(const std::filesystem::path& root,
-                                                const std::filesystem::path& directory) const;
+                                                const std::filesystem::path& directory,
+                                                ScanProgress& progress) const;
+    std::size_t countDirectories(const std::filesystem::path& directory) const;
     const Asset* findAssetRecursive(const Asset& asset, const std::filesystem::path& relativePath) const;
     void resetPlaceholderRoot(const std::filesystem::path& root);
 
     std::filesystem::path m_root;
     std::unique_ptr<FolderAsset> m_rootAsset;
+    std::shared_ptr<ScanProgress> m_scanProgress;
     std::string m_statusMessage;
     std::uint64_t m_scanGeneration = 0;
     bool m_scanned = false;
