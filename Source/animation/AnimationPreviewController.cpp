@@ -22,6 +22,13 @@ namespace editor
 {
 namespace
 {
+// 与导出的 durationMsCovering 一致：向上取整到毫秒，可以比动画长，不能短。
+std::int32_t spineDurationCoveringMs(float seconds)
+{
+    const double milliseconds = static_cast<double>(seconds) * 1000.0;
+    return std::max<std::int32_t>(1, static_cast<std::int32_t>(std::ceil(milliseconds - 1e-4)));
+}
+
 int expandedRenderTextureCapacity(int requested, int currentCapacity)
 {
     constexpr int kCapacityGranularity = 256;
@@ -236,8 +243,7 @@ bool AnimationPreviewController::loadSpine(const std::filesystem::path& jsonPath
         return false;
     }
     spineKeepCurrentTrackAlive(m_spine, 0);
-    m_spineDurationMs = std::max(
-        1, static_cast<std::int32_t>(std::lround(spineAnimationDuration(m_spine, animationName) * 1000.0f)));
+    m_spineDurationMs = spineDurationCoveringMs(spineAnimationDuration(m_spine, animationName));
     m_error.clear();
     setTime(0);
     return true;
@@ -268,8 +274,7 @@ bool AnimationPreviewController::setSpineAnimation(const std::string& animationN
     }
     spineKeepCurrentTrackAlive(m_spine, 0);
     m_spineAnimation  = animationName;
-    m_spineDurationMs = std::max(
-        1, static_cast<std::int32_t>(std::lround(spineAnimationDuration(m_spine, animationName) * 1000.0f)));
+    m_spineDurationMs = spineDurationCoveringMs(spineAnimationDuration(m_spine, animationName));
     m_error.clear();
     setTime(0);
     return true;
