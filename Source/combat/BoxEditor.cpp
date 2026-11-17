@@ -171,11 +171,24 @@ void BoxEditor::drawPreviewControls(EditorContext& context, BoxDocument& documen
     if (!session)
         return;
     const AnimationPreviewController& preview = session->preview();
+    const bool canStep = document.data().duration > 0;
     if (ImGui::Button("|<"))
         session->setPlayheadMs(0);
     ImGui::SameLine();
+    ImGui::BeginDisabled(!canStep);
+    if (ImGui::Button("<"))
+        session->stepFrame(-1);
+    ImGui::SetItemTooltip("Previous Frame");
+    ImGui::EndDisabled();
+    ImGui::SameLine();
     if (ImGui::Button(session->isPlaying() ? "Pause" : "Play"))
         session->setPlaying(!session->isPlaying());
+    ImGui::SameLine();
+    ImGui::BeginDisabled(!canStep);
+    if (ImGui::Button(">"))
+        session->stepFrame(1);
+    ImGui::SetItemTooltip("Next Frame");
+    ImGui::EndDisabled();
     ImGui::SameLine();
     if (ImGui::Button(">|"))
         session->setPlayheadMs(std::max(0, document.data().duration - 1));

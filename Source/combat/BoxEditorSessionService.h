@@ -29,6 +29,8 @@ public:
     void setPlayheadMs(std::int32_t value);
     bool isPlaying() const;
     void setPlaying(bool playing);
+    // direction < 0 上一帧，> 0 下一帧，并停止播放。有动画帧边界时按帧，否则按 1ms。
+    void stepFrame(int direction);
 
     int selectedTrack = -1;
     int selectedKey = -1;
